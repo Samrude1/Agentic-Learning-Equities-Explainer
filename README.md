@@ -1,38 +1,33 @@
-# Alex - the Agentic Learning Equities Explainer
+# Alex - Autonomous Financial Intelligence Platform
 
-## Multi-agent Enterprise-Grade SaaS Financial Planner
+Alex (Agentic Learning Equities eXplainer) is a state-of-the-art, multi-agent enterprise SaaS platform designed for high-precision financial analysis and portfolio management.
 
-![Course Image](assets/alex.png)
+This platform leverages a specialized swarm of AI agents to provide deep insights into equities, risk exposure, and long-term financial projections.
 
-_If you're looking at this in Cursor, please right click on the filename in the Explorer on the left, and select "Open preview", to view it in formatted glory._
+## Core Capabilities
 
-### Welcome to The Capstone Project for Week 3 and Week 4!
+- **Autonomous Research Swarm**: Specialized agents that continuously monitor global market trends and regulatory shifts.
+- **Dynamic Portfolio Analysis**: Real-time asset classification and risk assessment using advanced grounding techniques.
+- **Serverless Intelligence**: Built on a highly scalable, cost-optimized AWS architecture (Lambda, SQS, Aurora v2).
+- **S3 Vector Knowledge Base**: A high-performance, low-cost retrieval-augmented generation (RAG) system.
+- **Predictive Projections**: Monte Carlo simulations and future valuation models for long-term planning.
 
-#### The directories:
+## Architecture Overview
 
-1. **guides** - this is where you will live - step by step guides to deploy to production
-2. **backend** - the agent code, organized into subdirectories, each a uv project (as is the backend parent directory)
-3. **frontend** - a NextJS React frontend integrated with Clerk
-4. **terraform** - separate terraform subdirectories with state for each part
-5. **scripts** - the final deployment script
+Alex utilizes an orchestrator-worker pattern where a central **Planner Agent** coordinates specialized workers:
+- **Tagger Agent**: Automated asset and sector classification.
+- **Reporter Agent**: Comprehensive narrative generation.
+- **Charter Agent**: Dynamic data visualization.
+- **Retirement Agent**: Long-term outcome projections.
+- **Researcher Agent**: Independent market intelligence gathering.
 
-#### Order of play:
+## Technology Stack
 
-##### Week 3
+- **Cloud**: AWS (Lambda, App Runner, Aurora Serverless, S3, API Gateway)
+- **AI/ML**: AWS Bedrock (Nova Pro), SageMaker Serverless (Embeddings), S3 Vectors
+- **Orchestration**: OpenAI Agents SDK (SQS-driven)
+- **Frontend**: Next.js & React
+- **Infrastructure**: Terraform
 
-- On Week 3 Day 3, we will do 1_permissions and 2_sagemaker
-- On Week 3 Day 4, we will do 3_ingest
-- On Week 3 Day 5, we will do 4_researcher
-
-##### Week 4
-
-- On Week 4 Day 1, we will do 5_database
-- On Week 4 Day 2, we will do 6_agents
-- On Week 4 Day 3, we will do 7_frontend
-- On Week 4 Day 4, we will do 8_enterprise
-
-#### Keep in mind
-
-- Please submit your community_contributions, including links to your repos, in the production repo community_contributions folder
-- Regularly do a git pull to get the latest code
-- Reach out in Udemy or email (ed@edwarddonner.com) if I can help! This is a gigantic project and I am here to help you deliver it!
+---
+*Developed as a high-performance demonstration of production-grade agentic AI.*
