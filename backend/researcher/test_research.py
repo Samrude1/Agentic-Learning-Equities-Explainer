@@ -9,14 +9,27 @@ import sys
 import json
 import requests
 import argparse
+import os
+
+# Fix console encoding for Windows to support emojis
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 
 def get_service_url():
     """Get the App Runner service URL from AWS."""
+    import os
+    from dotenv import load_dotenv
+    
+    # Load environment variables
+    env_path = os.path.join(os.path.dirname(__file__), '../../.env')
+    load_dotenv(env_path)
+    region = os.environ.get("DEFAULT_AWS_REGION", "us-east-1")
+
     try:
         # Get service ARN first
         result = subprocess.run([
-            "aws", "apprunner", "list-services",
+            "aws", "apprunner", "list-services", "--region", region,
             "--query", "ServiceSummaryList[?ServiceName=='alex-researcher'].ServiceArn",
             "--output", "json"
         ], capture_output=True, text=True, check=True)
@@ -31,7 +44,7 @@ def get_service_url():
         
         # Get service URL
         result = subprocess.run([
-            "aws", "apprunner", "describe-service",
+            "aws", "apprunner", "describe-service", "--region", region,
             "--service-arn", service_arn,
             "--query", "Service.ServiceUrl",
             "--output", "text"

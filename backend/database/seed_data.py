@@ -22,7 +22,7 @@ database = os.environ.get("AURORA_DATABASE", "alex")
 region = os.environ.get("DEFAULT_AWS_REGION", "us-east-1")
 
 if not cluster_arn or not secret_arn:
-    print("❌ Missing AURORA_CLUSTER_ARN or AURORA_SECRET_ARN in .env file")
+    print("[ERROR] Missing AURORA_CLUSTER_ARN or AURORA_SECRET_ARN in .env file")
     exit(1)
 
 client = boto3.client("rds-data", region_name=region)
@@ -354,7 +354,7 @@ def insert_instrument(instrument_data):
     try:
         instrument = InstrumentCreate(**instrument_data)
     except ValidationError as e:
-        print(f"    ❌ Validation error: {e}")
+        print(f"    [ERROR] Validation error: {e}")
         return False
 
     # Get validated data
@@ -408,7 +408,7 @@ def insert_instrument(instrument_data):
         )
         return True
     except ClientError as e:
-        print(f"    ❌ Error: {e.response['Error']['Message'][:100]}")
+        print(f"    [ERROR] Error: {e.response['Error']['Message'][:100]}")
         return False
 
 
@@ -428,27 +428,27 @@ def verify_allocations(instrument):
 
 
 def main():
-    print("🚀 Seeding Instrument Data")
+    print(">>> Seeding Instrument Data")
     print("=" * 50)
     print(f"Loading {len(INSTRUMENTS)} instruments...")
 
     # First verify all allocations
-    print("\n📊 Verifying allocation data...")
+    print("\n[INFO] Verifying allocation data...")
     all_valid = True
     for inst in INSTRUMENTS:
         errors = verify_allocations(inst)
         if errors:
-            print(f"  ❌ {inst['symbol']}: {', '.join(errors)}")
+            print(f"  [ERROR] {inst['symbol']}: {', '.join(errors)}")
             all_valid = False
 
     if not all_valid:
-        print("\n❌ Some instruments have invalid allocations. Please fix before continuing.")
+        print("\n[ERROR] Some instruments have invalid allocations. Please fix before continuing.")
         exit(1)
 
-    print("  ✅ All allocations valid!")
+    print("  [OK] All allocations valid!")
 
     # Insert instruments
-    print("\n💾 Inserting instruments...")
+    print("\n[SAVE] Inserting instruments...")
     success_count = 0
 
     for inst in INSTRUMENTS:
@@ -456,16 +456,16 @@ def main():
             f"  [{success_count + 1}/{len(INSTRUMENTS)}] {inst['symbol']}: {inst['name'][:40]}..."
         )
         if insert_instrument(inst):
-            print(f"    ✅ Success")
+            print(f"    [OK] Success")
             success_count += 1
         else:
-            print(f"    ❌ Failed")
+            print(f"    [ERROR] Failed")
 
     print("\n" + "=" * 50)
     print(f"Seeding complete: {success_count}/{len(INSTRUMENTS)} instruments loaded")
 
     # Verify by querying
-    print("\n🔍 Verifying data...")
+    print("\n[CHECK] Verifying data...")
     try:
         response = client.execute_statement(
             resourceArn=cluster_arn,
@@ -491,10 +491,10 @@ def main():
             print(f"    - {symbol}: {name}")
 
     except ClientError as e:
-        print(f"  ❌ Error verifying: {e}")
+        print(f"  [ERROR] Error verifying: {e}")
 
-    print("\n✅ Seed data loaded successfully!")
-    print("\n📝 Next steps:")
+    print("\n[OK] Seed data loaded successfully!")
+    print("\n[INFO] Next steps:")
     print("1. Create test user and portfolio: uv run create_test_data.py")
     print("2. Test database operations: uv run test_db.py")
 

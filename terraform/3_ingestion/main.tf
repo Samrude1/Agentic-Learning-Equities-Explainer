@@ -20,9 +20,15 @@ provider "aws" {
 data "aws_caller_identity" "current" {}
 
 # ========================================
-# S3 Vectors Bucket
+# S3 Vectors Bucket (Assumed already created via Console)
 # ========================================
 
+locals {
+  bucket_name = "alex-vectors-${data.aws_caller_identity.current.account_id}"
+  bucket_arn  = "arn:aws:s3:::${local.bucket_name}"
+}
+
+/*
 resource "aws_s3_bucket" "vectors" {
   bucket = "alex-vectors-${data.aws_caller_identity.current.account_id}"
   
@@ -58,6 +64,7 @@ resource "aws_s3_bucket_public_access_block" "vectors" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+*/
 
 # ========================================
 # Lambda Function for Ingestion
@@ -112,8 +119,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "s3:ListBucket"
         ]
         Resource = [
-          aws_s3_bucket.vectors.arn,
-          "${aws_s3_bucket.vectors.arn}/*"
+          local.bucket_arn,
+          "${local.bucket_arn}/*"
         ]
       },
       {
@@ -131,7 +138,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "s3vectors:GetVectors",
           "s3vectors:DeleteVectors"
         ]
-        Resource = "arn:aws:s3vectors:${var.aws_region}:${data.aws_caller_identity.current.account_id}:bucket/${aws_s3_bucket.vectors.id}/index/*"
+        Resource = "arn:aws:s3vectors:${var.aws_region}:${data.aws_caller_identity.current.account_id}:bucket/${local.bucket_name}/index/*"
       }
     ]
   })
@@ -153,7 +160,7 @@ resource "aws_lambda_function" "ingest" {
   
   environment {
     variables = {
-      VECTOR_BUCKET      = aws_s3_bucket.vectors.id
+      VECTOR_BUCKET      = local.bucket_name
       SAGEMAKER_ENDPOINT = var.sagemaker_endpoint_name
     }
   }

@@ -10,7 +10,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from agents import Agent, Runner, trace
+from agents import Agent, Runner
 from agents.extensions.models.litellm_model import LitellmModel
 
 # Suppress LiteLLM warnings about optional dependencies
@@ -58,17 +58,16 @@ async def run_research_agent(topic: str = None) -> str:
     model = LitellmModel(model=MODEL)
 
     # Create and run the agent with MCP server
-    with trace("Researcher"):
-        async with create_playwright_mcp_server(timeout_seconds=60) as playwright_mcp:
-            agent = Agent(
-                name="Alex Investment Researcher",
-                instructions=get_agent_instructions(),
-                model=model,
-                tools=[ingest_financial_document],
-                mcp_servers=[playwright_mcp],
-            )
+    async with create_playwright_mcp_server(timeout_seconds=60) as playwright_mcp:
+        agent = Agent(
+            name="Alex Investment Researcher",
+            instructions=get_agent_instructions(),
+            model=model,
+            tools=[ingest_financial_document],
+            mcp_servers=[playwright_mcp],
+        )
 
-            result = await Runner.run(agent, input=query, max_turns=15)
+        result = await Runner.run(agent, input=query, max_turns=15)
 
     return result.final_output
 

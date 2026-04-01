@@ -31,7 +31,7 @@ database = os.environ.get('AURORA_DATABASE', 'alex')
 region = os.environ.get('DEFAULT_AWS_REGION', 'us-east-1')
 
 if not cluster_arn or not secret_arn:
-    print("❌ Missing AURORA_CLUSTER_ARN or AURORA_SECRET_ARN in .env file")
+    print("[ERROR] Missing AURORA_CLUSTER_ARN or AURORA_SECRET_ARN in .env file")
     exit(1)
 
 client = boto3.client('rds-data', region_name=region)
@@ -50,14 +50,14 @@ def execute_query(sql, description):
         )
         return response
     except ClientError as e:
-        print(f"❌ Error: {e.response['Error']['Message']}")
+        print(f"[ERROR] Error: {e.response['Error']['Message']}")
         return None
 
 def main():
-    print("🔍 DATABASE VERIFICATION REPORT")
+    print("[CHECK] DATABASE VERIFICATION REPORT")
     print("=" * 70)
-    print(f"📍 Region: {region}")
-    print(f"📦 Database: {database}")
+    print(f"[REGION] Region: {region}")
+    print(f"[DB] Database: {database}")
     print("=" * 70)
     
     # 1. Show all tables
@@ -70,15 +70,15 @@ def main():
         AND table_type = 'BASE TABLE'
         ORDER BY table_name
         """,
-        "📊 ALL TABLES IN DATABASE"
+        "[INFO] ALL TABLES IN DATABASE"
     )
     
     if response and response['records']:
-        print(f"✅ Found {len(response['records'])} tables:\n")
+        print(f"[OK] Found {len(response['records'])} tables:\n")
         for record in response['records']:
             table_name = record[0]['stringValue']
             size = record[1]['stringValue']
-            print(f"   • {table_name:<20} Size: {size}")
+            print(f"   - {table_name:<20} Size: {size}")
     
     # 2. Count records in each table
     response = execute_query(
@@ -95,7 +95,7 @@ def main():
         SELECT 'jobs', COUNT(*) FROM jobs
         ORDER BY table_name
         """,
-        "📈 RECORD COUNTS PER TABLE"
+        "[COUNT] RECORD COUNTS PER TABLE"
     )
     
     if response and response['records']:
@@ -103,7 +103,7 @@ def main():
         for record in response['records']:
             table_name = record[0]['stringValue']
             count = record[1]['longValue']
-            status = "✅" if (table_name == 'instruments' and count > 0) else "📭"
+            status = "[OK]" if (table_name == 'instruments' and count > 0) else "[EMPTY]"
             print(f"   {status} {table_name:<20} {count:,} records")
     
     # 3. Show instruments with allocation data
@@ -115,7 +115,7 @@ def main():
         ORDER BY symbol 
         LIMIT 10
         """,
-        "🎯 SAMPLE INSTRUMENTS (First 10)"
+        "[SAMPLE] SAMPLE INSTRUMENTS (First 10)"
     )
     
     if response and response['records']:
@@ -138,7 +138,7 @@ def main():
         FROM instruments
         WHERE symbol IN ('SPY', 'QQQ', 'BND', 'VEA', 'GLD')
         """,
-        "✅ ALLOCATION VALIDATION (Sample ETFs)"
+        "[OK] ALLOCATION VALIDATION (Sample ETFs)"
     )
     
     if response and response['records']:
@@ -153,7 +153,7 @@ def main():
             assets = float(record[3].get('stringValue', '0')) if record[3] and 'stringValue' in record[3] else 0
             
             all_valid = regions == 100 and sectors == 100 and assets == 100
-            status = "✅ Valid" if all_valid else "❌ Invalid"
+            status = "[OK] Valid" if all_valid else "[ERROR] Invalid"
             
             print(f"{symbol:<6} | {regions:>7}% | {sectors:>7}% | {assets:>6}% | {status}")
     
@@ -170,19 +170,19 @@ def main():
             COUNT(*) as total
         FROM instruments
         """,
-        "📊 ASSET CLASS DISTRIBUTION"
+        "[INFO] ASSET CLASS DISTRIBUTION"
     )
     
     if response and response['records']:
         record = response['records'][0]
         print("\nInstrument breakdown by asset class:\n")
-        print(f"   • Pure Equity ETFs:      {record[0]['longValue']:>3}")
-        print(f"   • Pure Bond Funds:       {record[1]['longValue']:>3}")
-        print(f"   • Real Estate ETFs:      {record[2]['longValue']:>3}")
-        print(f"   • Commodity ETFs:        {record[3]['longValue']:>3}")
-        print(f"   • Mixed Allocation ETFs: {record[4]['longValue']:>3}")
+        print(f"   - Pure Equity ETFs:      {record[0]['longValue']:>3}")
+        print(f"   - Pure Bond Funds:       {record[1]['longValue']:>3}")
+        print(f"   - Real Estate ETFs:      {record[2]['longValue']:>3}")
+        print(f"   - Commodity ETFs:        {record[3]['longValue']:>3}")
+        print(f"   - Mixed Allocation ETFs: {record[4]['longValue']:>3}")
         print(f"   " + "-" * 25)
-        print(f"   • TOTAL INSTRUMENTS:     {record[5]['longValue']:>3}")
+        print(f"   - TOTAL INSTRUMENTS:     {record[5]['longValue']:>3}")
     
     # 6. Check indexes exist
     response = execute_query(
@@ -193,11 +193,11 @@ def main():
         AND indexname LIKE 'idx_%'
         ORDER BY tablename, indexname
         """,
-        "🔍 DATABASE INDEXES"
+        "[CHECK] DATABASE INDEXES"
     )
     
     if response and response['records']:
-        print(f"\n✅ Found {len(response['records'])} custom indexes")
+        print(f"\n[OK] Found {len(response['records'])} custom indexes")
     
     # 7. Check triggers exist
     response = execute_query(
@@ -207,21 +207,21 @@ def main():
         WHERE trigger_schema = 'public'
         ORDER BY event_object_table
         """,
-        "⚡ DATABASE TRIGGERS"
+        "[TRIGGER] DATABASE TRIGGERS"
     )
     
     if response and response['records']:
-        print(f"\n✅ Found {len(response['records'])} update triggers for timestamp management")
+        print(f"\n[OK] Found {len(response['records'])} update triggers for timestamp management")
     
     # Final summary
     print("\n" + "=" * 70)
-    print("🎉 DATABASE VERIFICATION COMPLETE")
+    print("[SUCCESS] DATABASE VERIFICATION COMPLETE")
     print("=" * 70)
-    print("\n✅ All tables created successfully")
-    print("✅ 22 instruments loaded with complete allocation data")
-    print("✅ All allocation percentages sum to 100%")
-    print("✅ Indexes and triggers are in place")
-    print("✅ Database is ready for Part 6: Agent Orchestra!")
+    print("\n[OK] All tables created successfully")
+    print("[OK] 22 instruments loaded with complete allocation data")
+    print("[OK] All allocation percentages sum to 100%")
+    print("[OK] Indexes and triggers are in place")
+    print("[OK] Database is ready for Part 6: Agent Orchestra!")
 
 if __name__ == "__main__":
     main()

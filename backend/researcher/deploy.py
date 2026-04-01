@@ -11,6 +11,10 @@ import json
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Fix console encoding for Windows to support emojis
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 # Load environment variables from .env file
 load_dotenv(override=True)
 
@@ -121,7 +125,7 @@ def main():
     run_command(["docker", "push", f"{ecr_url}:{image_tag}"])
     run_command(["docker", "push", f"{ecr_url}:latest"])
 
-    print("\n✅ Docker image pushed successfully!")
+    print("\n[DONE] Docker image pushed successfully!")
     print(
         "\nNext step: Run 'terraform apply' in terraform/4_researcher to create the App Runner service."
     )
