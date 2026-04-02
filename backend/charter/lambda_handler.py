@@ -8,7 +8,7 @@ import asyncio
 import logging
 from typing import Dict, Any
 
-from agents import Agent, Runner, trace
+from agents import Agent, Runner
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from litellm.exceptions import RateLimitError
 
@@ -41,7 +41,7 @@ async def run_charter_agent(job_id: str, portfolio_data: Dict[str, Any], db=None
     model, task = create_agent(job_id, portfolio_data, db)
     
     # Run agent - no tools, no context
-    with trace("Charter Agent"):
+    if True: # with trace("Charter Agent"):
         agent = Agent(
             name="Chart Maker",
             instructions=CHARTER_INSTRUCTIONS,

@@ -8,7 +8,7 @@ import logging
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
-from agents import Agent, Runner, trace
+from agents import Agent, Runner
 from agents.extensions.models.litellm_model import LitellmModel
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -186,7 +186,7 @@ async def classify_instrument(
         )
 
         # Run the agent (following gameplan pattern exactly)
-        with trace(f"Classify {symbol}"):
+        if True: # with trace(f"Classify {symbol}"):
             agent = Agent(
                 name="InstrumentTagger",
                 instructions=TAGGER_INSTRUCTIONS,

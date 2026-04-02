@@ -16,15 +16,15 @@ def run_packaging(agent_name):
     package_script = agent_dir / "package_docker.py"
 
     if not package_script.exists():
-        print(f"  ❌ {agent_name}: Missing package_docker.py")
+        print(f"  [FAIL] {agent_name}: Missing package_docker.py")
         return False
 
-    print(f"\n📦 Packaging {agent_name.upper()} agent...")
+    print(f"\n[PACKAGE] Packaging {agent_name.upper()} agent...")
     print(f"  Running: cd {agent_dir} && uv run package_docker.py")
 
     try:
         result = subprocess.run(
-            ["uv", "run", "package_docker.py"], cwd=str(agent_dir), capture_output=True, text=True
+            ["uv", "run", "package_docker.py"], cwd=str(agent_dir), capture_output=True, text=True, errors="replace"
         )
 
         if result.returncode == 0:
@@ -33,19 +33,19 @@ def run_packaging(agent_name):
             if zip_files:
                 zip_file = zip_files[0]
                 size_mb = zip_file.stat().st_size / (1024 * 1024)
-                print(f"  ✅ Created: {zip_file.name} ({size_mb:.1f} MB)")
+                print(f"  [OK] Created: {zip_file.name} ({size_mb:.1f} MB)")
                 return True
             else:
-                print(f"  ⚠️  Warning: No zip file found after packaging")
+                print(f"  [WARN]  Warning: No zip file found after packaging")
                 return True
         else:
             print(
-                f"  ❌ Error with {agent_name.upper()}:\nPlease note that warnings about uv environment can be ignored:\n{result.stderr}\nOutput from script is:\n{result.stdout}"
+                f"  [FAIL] Error with {agent_name.upper()}:\nPlease note that warnings about uv environment can be ignored:\n{result.stderr}\nOutput from script is:\n{result.stdout}"
             )
             return False
 
     except Exception as e:
-        print(f"  ❌ Error: {e}")
+        print(f"  [FAIL] Error: {e}")
         return False
 
 
@@ -70,20 +70,20 @@ def main():
     total_count = len(results)
 
     for agent, success in results.items():
-        status = "✅ Success" if success else "❌ Failed"
+        status = "[OK] Success" if success else "[FAIL] Failed"
         print(f"{agent.ljust(12)}: {status}")
 
     print("\n" + "=" * 60)
     print(f"Packaged: {success_count}/{total_count}")
 
     if success_count == total_count:
-        print("\n✅ ALL LAMBDA FUNCTIONS PACKAGED SUCCESSFULLY!")
+        print("\n[OK] ALL LAMBDA FUNCTIONS PACKAGED SUCCESSFULLY!")
         print("\nNext steps:")
         print("1. Deploy infrastructure: cd terraform/6_agents && terraform apply")
         print("2. Deploy Lambda functions: cd backend && uv run deploy_all_lambdas.py")
         return 0
     else:
-        print(f"\n⚠️  {total_count - success_count} agents failed to package")
+        print(f"\n[WARN]  {total_count - success_count} agents failed to package")
         return 1
 
 

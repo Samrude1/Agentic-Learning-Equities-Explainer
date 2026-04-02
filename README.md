@@ -1,6 +1,6 @@
-# Alex - Autonomous Financial Intelligence Platform
+# Autonomous Financial Intelligence Platform
 
-Alex (Agentic Learning Equities eXplainer) is a state-of-the-art, multi-agent enterprise SaaS platform designed for high-precision financial analysis and portfolio management.
+Agentic Learning Equities eXplainer is a state-of-the-art, multi-agent enterprise SaaS platform designed for high-precision financial analysis and portfolio management.
 
 This platform leverages a specialized swarm of AI agents to provide deep insights into equities, risk exposure, and long-term financial projections.
 

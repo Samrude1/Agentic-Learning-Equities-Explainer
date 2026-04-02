@@ -21,12 +21,12 @@ def test_agent(agent_name, test_file="test_simple.py"):
     agent_dir = backend_dir / agent_name
     
     if not agent_dir.exists():
-        print(f"  ❌ {agent_name}: Directory not found")
+        print(f"  [FAIL] {agent_name}: Directory not found")
         return False
     
     test_path = agent_dir / test_file
     if not test_path.exists():
-        print(f"  ⚠️  {agent_name}: No {test_file} found, skipping")
+        print(f"  [WARN]  {agent_name}: No {test_file} found, skipping")
         return True  # Not a failure, just skip
     
     # Set environment for mocked lambdas
@@ -40,14 +40,14 @@ def test_agent(agent_name, test_file="test_simple.py"):
     )
     
     if success:
-        print(f"  ✅ {agent_name}: Test passed")
+        print(f"  [PASS] {agent_name}: Test passed")
         if stdout and "Status Code: 200" in stdout:
             # Extract key info from successful runs
             for line in stdout.split('\n'):
                 if 'Tagged:' in line or 'Success:' in line or 'Message:' in line:
                     print(f"     {line.strip()}")
     else:
-        print(f"  ❌ {agent_name}: Test failed")
+        print(f"  [FAIL] {agent_name}: Test failed")
         if stderr:
             # Show first error line
             error_lines = [l for l in stderr.split('\n') if l.strip()]
@@ -98,10 +98,10 @@ def main():
     print("="*60)
     
     if failed > 0:
-        print("\n⚠️  SOME TESTS FAILED")
+        print("\n[WARN]  SOME TESTS FAILED")
         sys.exit(1)
     else:
-        print("\n✅ ALL TESTS PASSED!")
+        print("\n[OK] ALL TESTS PASSED!")
         sys.exit(0)
 
 if __name__ == "__main__":

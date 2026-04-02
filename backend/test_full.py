@@ -67,7 +67,7 @@ def setup_test_data(db):
 
 def main():
     print("=" * 70)
-    print("🎯 Full End-to-End Test via SQS")
+    print(">>> Full End-to-End Test via SQS")
     print("=" * 70)
     
     db = Database()
@@ -105,7 +105,7 @@ def main():
             break
     
     if not queue_url:
-        print(f"  ❌ Queue {QUEUE_NAME} not found")
+        print(f"  [FAIL] Queue {QUEUE_NAME} not found")
         return 1
     
     print(f"  ✓ Found queue: {QUEUE_NAME}")
@@ -119,7 +119,7 @@ def main():
     print(f"  ✓ Message sent: {response['MessageId']}")
     
     # Monitor job progress
-    print("\n⏳ Monitoring job progress...")
+    print("\n   Monitoring job progress...")
     print("-" * 50)
     
     start_time = time.time()
@@ -140,22 +140,22 @@ def main():
         
         if status == 'completed':
             print("-" * 50)
-            print("\n✅ Job completed successfully!")
-            print("\n📊 Analysis Results:")
+            print("\n[OK] Job completed successfully!")
+            print("\n[INFO] Analysis Results:")
             
             # Report
             if job.get('report_payload'):
                 report_content = job['report_payload'].get('content', '')
-                print(f"\n📝 Report Generated:")
+                print(f"\n[REPORT] Report Generated:")
                 print(f"   - Length: {len(report_content)} characters")
                 print(f"   - Preview: {report_content[:200]}...")
             else:
-                print("\n❌ No report found")
+                print("\n[FAIL] No report found")
             
             # Charts
             if job.get('charts_payload'):
                 charts = job['charts_payload']
-                print(f"\n📊 Charts Created: {len(charts)} visualizations")
+                print(f"\n[CHART] Charts Created: {len(charts)} visualizations")
                 for chart_key, chart_data in charts.items():
                     if isinstance(chart_data, dict):
                         title = chart_data.get('title', 'Untitled')
@@ -163,12 +163,12 @@ def main():
                         data_points = len(chart_data.get('data', []))
                         print(f"   - {chart_key}: {title} ({chart_type}, {data_points} data points)")
             else:
-                print("\n❌ No charts found")
+                print("\n[FAIL] No charts found")
             
             # Retirement
             if job.get('retirement_payload'):
                 retirement = job['retirement_payload']
-                print(f"\n🎯 Retirement Analysis:")
+                print(f"\n[TARGET] Retirement Analysis:")
                 if isinstance(retirement, dict):
                     if 'success_rate' in retirement:
                         print(f"   - Success Rate: {retirement['success_rate']}%")
@@ -177,12 +177,12 @@ def main():
                     if 'analysis' in retirement:
                         print(f"   - Analysis Length: {len(retirement['analysis'])} characters")
             else:
-                print("\n❌ No retirement analysis found")
+                print("\n[FAIL] No retirement analysis found")
             
             # Summary
             if job.get('summary_payload'):
                 summary = job['summary_payload']
-                print(f"\n📋 Summary:")
+                print(f"\n[SUMMARY] Summary:")
                 if isinstance(summary, dict):
                     for key, value in summary.items():
                         if key != 'timestamp':
@@ -191,7 +191,7 @@ def main():
             break
         elif status == 'failed':
             print("-" * 50)
-            print(f"\n❌ Job failed")
+            print(f"\n[FAIL] Job failed")
             if job.get('error_message'):
                 print(f"Error details: {job['error_message']}")
             break
@@ -199,11 +199,11 @@ def main():
         time.sleep(2)
     else:
         print("-" * 50)
-        print("\n❌ Job timed out after 3 minutes")
+        print("\n[FAIL] Job timed out after 3 minutes")
         print(f"Final status: {job['status']}")
         return 1
     
-    print(f"\n📋 Job Details:")
+    print(f"\n[SUMMARY] Job Details:")
     print(f"   - Job ID: {job_id}")
     print(f"   - User ID: {test_user_id}")
     print(f"   - Total Time: {int(time.time() - start_time)} seconds")

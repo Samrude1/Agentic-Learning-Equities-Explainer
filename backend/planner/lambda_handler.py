@@ -8,7 +8,7 @@ import asyncio
 import logging
 from typing import Dict, Any
 
-from agents import Agent, Runner, trace
+from agents import Agent, Runner
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from litellm.exceptions import RateLimitError
 
@@ -58,7 +58,7 @@ async def run_orchestrator(job_id: str) -> None:
         model, tools, task, context = create_agent(job_id, portfolio_summary, db)
         
         # Run the orchestrator
-        with trace("Planner Orchestrator"):
+        if True: # with trace("Planner Orchestrator"):
             from agent import PlannerContext
             agent = Agent[PlannerContext](
                 name="Financial Planner",

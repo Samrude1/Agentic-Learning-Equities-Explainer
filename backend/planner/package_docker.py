@@ -15,7 +15,7 @@ from pathlib import Path
 def run_command(cmd, cwd=None):
     """Run a command and capture output."""
     print(f"Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, errors='replace')
     if result.returncode != 0:
         print(f"Error: {result.stderr}")
         sys.exit(1)
@@ -89,10 +89,8 @@ def package_lambda():
         
         # Create new zip
         print(f"Creating zip file: {zip_path}")
-        run_command(
-            ["zip", "-r", str(zip_path), "."],
-            cwd=str(package_dir)
-        )
+        # Cross-platform zip creation using python standard library instead of zip.exe
+        shutil.make_archive(str(zip_path.with_suffix('')), 'zip', str(package_dir))
         
         # Get file size
         size_mb = zip_path.stat().st_size / (1024 * 1024)

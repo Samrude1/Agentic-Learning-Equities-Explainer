@@ -163,6 +163,8 @@ resource "aws_iam_role_policy" "lambda_agents_policy" {
         Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:endpoint/${var.sagemaker_endpoint}"
       },
       # Bedrock access for all agents
+      # Using wildcard region because cross-region inference profiles (us.amazon.nova-pro-v1:0)
+      # route requests to multiple regions (us-east-1, us-west-2, etc.)
       {
         Effect = "Allow"
         Action = [
@@ -170,8 +172,8 @@ resource "aws_iam_role_policy" "lambda_agents_policy" {
           "bedrock:InvokeModelWithResponseStream"
         ]
         Resource = [
-          "arn:aws:bedrock:${var.bedrock_region}::foundation-model/*",
-          "arn:aws:bedrock:${var.bedrock_region}:*:inference-profile/*"
+          "arn:aws:bedrock:*::foundation-model/*",
+          "arn:aws:bedrock:*:*:inference-profile/*"
         ]
       }
     ]

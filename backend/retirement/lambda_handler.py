@@ -9,7 +9,7 @@ import logging
 from typing import Dict, Any
 from datetime import datetime
 
-from agents import Agent, Runner, trace
+from agents import Agent, Runner
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from litellm.exceptions import RateLimitError
 
@@ -78,7 +78,7 @@ async def run_retirement_agent(job_id: str, portfolio_data: Dict[str, Any]) -> D
     model, tools, task = create_agent(job_id, portfolio_data, user_preferences, db)
     
     # Run agent (simplified - no context)
-    with trace("Retirement Agent"):
+    if True: # with trace("Retirement Agent"):
         agent = Agent(
             name="Retirement Specialist",
             instructions=RETIREMENT_INSTRUCTIONS,

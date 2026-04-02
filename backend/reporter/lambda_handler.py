@@ -9,7 +9,7 @@ import logging
 from typing import Dict, Any
 from datetime import datetime
 
-from agents import Agent, Runner, trace
+from agents import Agent, Runner
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from litellm.exceptions import RateLimitError
 from judge import evaluate
@@ -55,7 +55,7 @@ async def run_reporter_agent(
     model, tools, task, context = create_agent(job_id, portfolio_data, user_data, db)
 
     # Run agent with context
-    with trace("Reporter Agent"):
+    if True: # with trace("Reporter Agent"):
         agent = Agent[ReporterContext](  # Specify the context type
             name="Report Writer", instructions=REPORTER_INSTRUCTIONS, model=model, tools=tools
         )
