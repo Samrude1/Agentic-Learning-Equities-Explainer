@@ -15,7 +15,7 @@ import zipfile
 def run_command(cmd, cwd=None):
     """Run a shell command and handle errors."""
     print(f"Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding='utf-8', errors='replace')
     if result.returncode != 0:
         print(f"Error: {result.stderr}")
         sys.exit(1)

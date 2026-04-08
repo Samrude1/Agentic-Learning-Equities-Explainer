@@ -21,16 +21,20 @@ from pathlib import Path
 
 def run_command(cmd, cwd=None, check=True, capture_output=False, env=None):
     """Run a command and optionally capture output."""
+    if os.name == 'nt' and isinstance(cmd, list):
+        import subprocess
+        cmd = subprocess.list2cmdline(cmd)
+        
     print(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
 
     if capture_output:
-        result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, shell=isinstance(cmd, str), env=env)
+        result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, shell=isinstance(cmd, str) or os.name == 'nt', env=env)
         if check and result.returncode != 0:
             print(f"Error: {result.stderr}")
             sys.exit(1)
         return result.stdout.strip()
     else:
-        result = subprocess.run(cmd, cwd=cwd, shell=isinstance(cmd, str), env=env)
+        result = subprocess.run(cmd, cwd=cwd, shell=isinstance(cmd, str) or os.name == 'nt', env=env)
         if check and result.returncode != 0:
             sys.exit(1)
         return None

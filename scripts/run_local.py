@@ -35,7 +35,7 @@ def check_requirements():
 
     # Check Node.js
     try:
-        result = subprocess.run(["node", "--version"], capture_output=True, text=True)
+        result = subprocess.run(["node", "--version"], capture_output=True, text=True, shell=os.name == 'nt')
         node_version = result.stdout.strip()
         checks.append(f"✅ Node.js: {node_version}")
     except FileNotFoundError:
@@ -43,7 +43,7 @@ def check_requirements():
 
     # Check npm
     try:
-        result = subprocess.run(["npm", "--version"], capture_output=True, text=True)
+        result = subprocess.run(["npm", "--version"], capture_output=True, text=True, shell=os.name == 'nt')
         npm_version = result.stdout.strip()
         checks.append(f"✅ npm: {npm_version}")
     except FileNotFoundError:
@@ -51,7 +51,7 @@ def check_requirements():
 
     # Check uv (which manages Python for us)
     try:
-        result = subprocess.run(["uv", "--version"], capture_output=True, text=True)
+        result = subprocess.run(["uv", "--version"], capture_output=True, text=True, shell=os.name == 'nt')
         uv_version = result.stdout.strip()
         checks.append(f"✅ uv: {uv_version}")
     except FileNotFoundError:
@@ -100,16 +100,18 @@ def start_backend():
     # Check if dependencies are installed
     if not (backend_dir / ".venv").exists() and not (backend_dir / "uv.lock").exists():
         print("  Installing backend dependencies...")
-        subprocess.run(["uv", "sync"], cwd=backend_dir, check=True)
+        subprocess.run(["uv", "sync"], cwd=backend_dir, check=True, shell=os.name == 'nt')
 
     # Start the backend
+    proc_cmd = "uv run main.py" if os.name == 'nt' else ["uv", "run", "main.py"]
     proc = subprocess.Popen(
-        ["uv", "run", "main.py"],
+        proc_cmd,
         cwd=backend_dir,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
-        bufsize=1
+        bufsize=1,
+        shell=os.name == 'nt'
     )
     processes.append(proc)
 
@@ -138,16 +140,18 @@ def start_frontend():
     # Check if dependencies are installed
     if not (frontend_dir / "node_modules").exists():
         print("  Installing frontend dependencies...")
-        subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
+        subprocess.run(["npm", "install"], cwd=frontend_dir, check=True, shell=os.name == 'nt')
 
     # Start the frontend
+    proc_cmd = "npm run dev" if os.name == 'nt' else ["npm", "run", "dev"]
     proc = subprocess.Popen(
-        ["npm", "run", "dev"],
+        proc_cmd,
         cwd=frontend_dir,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,  # Combine stderr with stdout
         text=True,
-        bufsize=1
+        bufsize=1,
+        shell=os.name == 'nt'
     )
     processes.append(proc)
 
@@ -159,7 +163,8 @@ def start_frontend():
     started = False
     for i in range(30):  # 30 second timeout
         # Check for any output from the process using non-blocking read
-        if proc.stdout:
+        # Note: select.select on pipes is not supported on Windows (WinError 10038)
+        if proc.stdout and os.name != 'nt':
             ready, _, _ = select.select([proc.stdout], [], [], 0)
             if ready:
                 line = proc.stdout.readline()
@@ -204,7 +209,12 @@ def monitor_processes():
         for proc in processes:
             # Check if process is still running
             if proc.poll() is not None:
-                print(f"\n⚠️  A process has stopped unexpectedly!")
+                print(f"\n⚠️  A process has stopped unexpectedly! ({proc.args})")
+                try:
+                    # Print any remaining output to see the error
+                    print(proc.stdout.read())
+                except:
+                    pass
                 cleanup()
 
             # Read any available output
@@ -231,7 +241,7 @@ def main():
         import httpx
     except ImportError:
         print("\n📦 Installing httpx for health checks...")
-        subprocess.run(["uv", "add", "httpx"], check=True)
+        subprocess.run(["uv", "add", "httpx"], check=True, shell=os.name == 'nt')
 
     # Start services
     backend_proc = start_backend()
