@@ -28,6 +28,55 @@ from observability import observe
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+def validate_chart_data(chart_json: str) -> tuple[bool, str, Dict[Any, Any]]:
+    """
+    Validates that charter agent output is well-formed JSON with expected structure.
+    Returns (is_valid, error_message, parsed_data)
+    """
+    try:
+        # Parse JSON
+        data = json.loads(chart_json)
+
+        # Validate expected structure
+        required_keys = ["charts"]
+        if not all(key in data for key in required_keys):
+            return False, f"Missing required keys. Expected: {required_keys}", {}
+
+        # Validate charts array
+        if not isinstance(data["charts"], list):
+            return False, "Charts must be an array", {}
+
+        # Validate each chart
+        for i, chart in enumerate(data["charts"]):
+            if "type" not in chart:
+                return False, f"Chart {i} missing 'type' field", {}
+
+            if "data" not in chart:
+                return False, f"Chart {i} missing 'data' field", {}
+
+            # Validate chart data is array
+            if not isinstance(chart["data"], list):
+                return False, f"Chart {i} data must be an array", {}
+
+            # Validate data points have required fields based on chart type
+            if chart["type"] == "pie":
+                for point in chart["data"]:
+                    if "name" not in point or "value" not in point:
+                        return False, f"Pie chart data points must have 'name' and 'value'", {}
+            elif chart["type"] == "bar":
+                for point in chart["data"]:
+                    if "category" not in point:
+                        return False, f"Bar chart data points must have 'category'", {}
+
+        return True, "", data
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON from charter agent: {e}")
+        return False, f"Invalid JSON: {e}", {}
+    except Exception as e:
+        logger.error(f"Unexpected error validating chart data: {e}")
+        return False, f"Validation error: {e}", {}
+
 @retry(
     retry=retry_if_exception_type(RateLimitError),
     stop=stop_after_attempt(5),
@@ -69,7 +118,7 @@ async def run_charter_agent(job_id: str, portfolio_data: Dict[str, Any], db=None
                 for i, msg in enumerate(result.messages):
                     logger.info(f"Charter: Message {i}: {str(msg)[:500]}")
         
-        # Parse the JSON output
+        # Parse the JSON output and validate
         charts_data = None
         charts_saved = False
         
@@ -83,8 +132,11 @@ async def run_charter_agent(job_id: str, portfolio_data: Dict[str, Any], db=None
                 json_str = output[start_idx:end_idx + 1]
                 logger.info(f"Charter: Extracted JSON substring, length: {len(json_str)}")
                 
-                try:
-                    parsed_data = json.loads(json_str)
+                is_valid, error_msg, parsed_data = validate_chart_data(json_str)
+
+                if not is_valid:
+                    logger.error(f"Charter agent produced invalid output for job {job_id}: {error_msg}")
+                else:
                     charts = parsed_data.get('charts', [])
                     logger.info(f"Charter: Successfully parsed JSON, found {len(charts)} charts")
                     
@@ -109,10 +161,6 @@ async def run_charter_agent(job_id: str, portfolio_data: Dict[str, Any], db=None
                                 logger.error(f"Charter: Database error: {e}")
                     else:
                         logger.warning("Charter: No charts found in parsed JSON")
-                        
-                except json.JSONDecodeError as e:
-                    logger.error(f"Charter: Failed to parse JSON: {e}")
-                    logger.error(f"Charter: JSON string attempted: {json_str[:500]}...")
             else:
                 logger.error(f"Charter: No JSON structure found in output")
                 logger.error(f"Charter: Output preview: {output[:500]}...")
